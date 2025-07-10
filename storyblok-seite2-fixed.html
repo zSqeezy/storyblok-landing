@@ -1,0 +1,64 @@
+
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Storyblok Vorschau – seite2/landing (klein-p)</title>
+      <style>
+        body { font-family: sans-serif; padding: 2rem; }
+        img { max-width: 300px; margin-top: 1rem; }
+      </style>
+    </head>
+    <body>
+      <div id="app">
+        <p>Wird geladen...</p>
+      </div>
+
+      <script>
+        async function fetchStory() {
+          const token = "AwrHyhiHuOA2Gm78LO9MRwtt";
+          const storyUrl = "https://api.storyblok.com/v2/cdn/stories/seite2/landing?version=published&token=" + token;
+
+          try {
+            const res = await fetch(storyUrl);
+            const data = await res.json();
+
+            const body = data.story.content.body;
+            const productUuid = body && body[0] && body[0].product && body[0].product[0];
+            if (!productUuid) {
+              document.getElementById("app").innerHTML = "<p><strong>Kein Produkt verknüpft.</strong></p>";
+              return;
+            }
+
+            const relsUrl = "https://api.storyblok.com/v2/cdn/stories?version=published&token=" + token;
+            const relsRes = await fetch(relsUrl);
+            const relsData = await relsRes.json();
+
+            const linked = relsData.stories.find(story => story.uuid === productUuid);
+            if (!linked) {
+              document.getElementById("app").innerHTML = "<p><strong>Produkt nicht gefunden.</strong></p>";
+              return;
+            }
+
+            const product = linked.content;
+            const description = (product.description && product.description.content && product.description.content[0] && product.description.content[0].content && product.description.content[0].content[0].text) || "Keine Beschreibung";
+            const imageTag = product.image ? `<img src="${product.image.filename}" alt="Produktbild" />` : "";
+
+            document.getElementById("app").innerHTML = `
+              <h1>${product.name}</h1>
+              <p><strong>Preis:</strong> ${product.price || "k. A."} €</p>
+              <p>${description}</p>
+              ${imageTag}
+            `;
+          } catch (error) {
+            console.error("Fehler:", error);
+            document.getElementById("app").innerHTML = "<p style='color:red;'>Fehler beim Laden des Produkts.</p>";
+          }
+        }
+
+        fetchStory();
+      </script>
+    </body>
+    </html>
+    
